@@ -1,0 +1,94 @@
+<?php
+
+class Timetable{
+    private $db;
+
+    public function __construct()
+    {
+        $this->db = new Database();
+    }
+
+    public function getTimetableByPidYear($pid, $year, $version){
+        $this->db->query("SELECT  t.course_code, t.slot_id, t.room_id, t.lecturer_id FROM timetable t JOIN course c ON t.course_code = c.course_code WHERE t.program_id = :pid AND c.year = :year AND t.version_id = :version");
+        $this->db->bind(':pid', $pid);
+        $this->db->bind(':year', $year);
+        $this->db->bind(':version', $version);
+        $this->db->execute();
+        return $this->db->results();
+    }
+
+    public function addTimetable($code, $pid, $lid, $room, $slot, $version){
+        $this->db->query("INSERT INTO timetable(course_code, program_id, lecturer_id, room_id, slot_id, version_id) VALUES (:code, :pid, :lid, :room, :slot, :version)");
+        $this->db->bind(':code', $code);
+        $this->db->bind(':pid', $pid);
+        $this->db->bind(':lid', $lid);
+        $this->db->bind(':room', $room);
+        $this->db->bind(':slot', $slot);
+        $this->db->bind(':version', $version);
+        $this->db->execute();
+    }
+
+    public function update($id, $code, $pid, $lid, $room, $slot, $version){
+        $this->db->query("UPDATE timetable SET course_code = :code, program_id = :pid, lecturer_id = :lid, room_id = :room, slot_id = :slot, version_id = :version WHERE timetable_id = :id");
+        $this->db->bind(':code', $code);
+        $this->db->bind(':id', $id);
+        $this->db->bind(':room', $room);
+        $this->db->bind(':pid', $pid);
+        $this->db->bind(':slot', $slot);
+        $this->db->bind(':version', $version);
+        $this->db->bind(':lid', $lid);
+        $this->db->execute();
+    }
+
+    public function getTimetableByCourseCode($code){
+        $this->db->query("SELECT *
+            FROM timetable t
+            JOIN timetable_version v ON t.version_id = v.version_id
+            WHERE t.course_code = :code
+            AND v.is_active = 1
+        ");
+        $this->db->bind(':code', $code);
+        $this->db->execute();
+        return $this->db->results();
+    }
+
+    public function getTimetableByLid($lid){
+        $this->db->query("SELECT * FROM timetable t
+            JOIN timetable_version v ON t.version_id = v.version_id
+            WHERE t.lecturer_id = :lid
+            AND v.is_active = 1
+        ");
+        $this->db->bind(':lid', $lid);
+        $this->db->execute();
+        return $this->db->results();
+    }
+
+    public function getElementsForClash($room_id, $lid, $version){
+        $this->db->query("SELECT course_code, room_id, day_of_week, start_time, end_time, lecturer_id WHERE room_id = :room_id OR lecturer_id = :lid AND version_id = :version");
+        $this->db->bind(':room_id', $room_id);
+        $this->db->bind(':lid', $lid);
+        $this->db->bind(':version', $version);
+        $this->db->execute();
+        return $this->db->results();
+    }
+
+}
+
+/*
+public function delete($code, $lid, $room, $slot, $version, $id){
+        $this->db->query("SELECT table_id FROM timetable WHERE course_code = :code AND lecturer_id = :lid AND room_id = :room AND slot_id = :slot AND version_id = :version");
+        $this->db->bind(':code', $code);
+        $this->db->bind(':room', $room);
+        $this->db->bind(':slot', $slot);
+        $this->db->bind(':version', $version);
+        $this->db->execute();
+        $table_id = $this->db->result();
+
+        $this->db->query("UPDATE timetable SET is_delete = :id WHERE table_id = :table_id");
+        $this->db->bind(':id', $id);
+        $this->db->execute();
+    }
+*/
+
+?>
+

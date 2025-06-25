@@ -1,0 +1,42 @@
+<?php
+
+class Course_Program{
+    private $db;
+
+    public function __construct()
+    {
+        $this->db = new Database();
+    }
+
+    public function getCourseByPidYear($pid, $year){
+        $this->db->query("SELECT course_code FROM course_program WHERE program_id = :pid and year = :year");
+        $this->db->bind(':pid', $pid);
+        $this->db->bind(':year', $year);
+        $this->db->execute();
+        return $this->db->results();
+    }
+
+    public function getCourseByYear($code, $pid){
+        $this->db->query("SELECT year FROM course WHERE course_code = :code AND program_id = :pid");
+        $this->db->bind(':code', $code);
+        $this->db->bind(':pid', $pid);
+        $this->db->execute();
+        return $this->db->results();
+    }
+
+    public function addCourse($code, $pid, $year){
+        $this->db->query("INSERT INTO course(course_code, program_id, year) VALUES (:code, :pid, :year)");
+        $this->db->bind(':code', $code);
+        $this->db->bind(':pid', $pid);
+        $this->db->bind(':year', $year);
+        $this->db->execute();
+    }
+
+    public function delete($id){
+        $this->db->query("DELETE FROM course WHERE course_code = :id");
+        $this->db->bind(':id', $id);
+        $this->db->execute();
+    }
+}
+
+?>
