@@ -19,7 +19,7 @@ class Timetable_Version{
         $this->db->query("SELECT * FROM timetable_version
                             WHERE created_by = :user
                             AND academic_year = :a_year
-                            AND program_id = :id
+                            AND program_id = :pid
                             AND year = :year
                             AND is_active = 1
                             ORDER BY created_at DESC

@@ -71,6 +71,7 @@ class App {
         $this->router->addRoute('GET', '/timetable/release', 'TimeslotController', 'releaseClassrooms');
         $this->router->addRoute('GET', '/pending', 'AdminController', 'getPendingUsers');
         $this->router->addRoute('POST', '/update_pending', 'AdminController', 'addRoles');
+        $this->router->addRoute('POST', '/clash_detect', 'DetectClash', 'checkClashes');
     }
     
     public function run() {

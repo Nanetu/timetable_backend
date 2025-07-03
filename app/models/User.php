@@ -44,6 +44,13 @@ class User{
         return $this->db->results();
     }
 
+    public function getAdminsForMail($role){
+        $this->db->query("SELECT name, email FROM user WHERE role = :role");
+        $this->db->bind(':role', $role);
+        $this->db->execute();
+        return $this->db->results();
+    }
+
     public function getSchool($email){
         $this->db->query("SELECT school_id FROM user WHERE email = :email");
         $this->db->bind(':email', $email);

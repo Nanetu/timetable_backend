@@ -248,11 +248,11 @@ class TimeslotController extends Controller {
             $user_id = $this->userModel->getUser($email);
             $current_year = date('Y');
 
-            $program = $entries['program_name'];
+            $program = $input['program_name'];
             $program_id = $this->programModel->getProgramByName($program);
             $program_id = $program_id['program_id'];
 
-            $course_year = $entries['year'];
+            $course_year = $input['year'];
 
             // Get previous version using user_id, program_id and course_year
             $previous = $this->versionModel->getVersion($user_id['user_id'], $current_year, $program_id, $course_year) ?? null;
@@ -268,7 +268,7 @@ class TimeslotController extends Controller {
             
 
             // Immediately fetch it back
-            $new_version = $this->versionModel->getVersion($user_id['user_id'], $current_year);
+            $new_version = $this->versionModel->getVersion($user_id['user_id'], $current_year, $program_id, $course_year);
             if (!$new_version || !isset($new_version['version_id'])) {
                 throw new Exception("Version not found after insert");
             }
@@ -277,7 +277,7 @@ class TimeslotController extends Controller {
 
             // Insert timetable entries
             foreach ($entries as $entry) {
-                $this->addEntry($entry['course_id'], $entry['program_name'], $entry['start_time'], $entry['end_time'], $entry['day_of_week'], $entry['lecturer_id'], $entry['room_id'], $new_version_id);
+                $this->addEntry($entry['course_id'], $program_id, $entry['start_time'], $entry['end_time'], $entry['day_of_week'], $entry['lecturer_id'], $entry['room_id'], $new_version_id);
             }
 
             echo json_encode([
@@ -292,9 +292,7 @@ class TimeslotController extends Controller {
 
     }
 
-    public function addEntry($code, $program, $start, $end, $day, $lecturer, $room, $version){
-        $program_id = $this->programModel->getProgramByName($program);
-        $program_id = $program_id['program_id'];
+    public function addEntry($code, $program_id, $start, $end, $day, $lecturer, $room, $version){
         $slot_id = $this->tsModel->getTimeslotByDse($day, $start, $end);
         if(!$slot_id){
             $this->tsModel->addTimeslot($day, $start, $end);
@@ -449,7 +447,37 @@ class TimeslotController extends Controller {
         $this->classModel->classroomLock($school_id, 1);
         echo json_encode(['status'=>'success']);
 
-        // send email to all admins from all schools
+        $result = sendMail(
+            $email, 
+            "mushongomananetu@gmail.com", 
+            "Nanetu", 
+            "Classroom lock", 
+            $school, 
+            "All classes belonging to the $school have been locked"
+        );
+
+        if ($result['success']) {
+            echo $result['message'];
+        } else {
+            echo "Error: " . $result['message'];
+        }
+
+        /*
+        $recipients = $this->userModel->getAdminsForMail('admin');
+
+        foreach($recipients as $recipient){
+            if($recipient['email'] == $email) continue;
+            sendMail(
+                    $email, 
+                    $recipient['email'], 
+                    $recipient['name'],
+                    "Classroom lock",
+                    $school,
+                    "All classes belonging to the $school have been locked"
+                );
+        }
+
+        */
     }
 
     public function releaseClassrooms(){
@@ -474,7 +502,36 @@ class TimeslotController extends Controller {
 
         echo json_encode(['status'=>'success']);
 
-        // send email to all admins from all schools
+        $result = sendMail(
+            $email, 
+            "mushongomananetu@gmail.com", 
+            "Nanetu", 
+            "Classroom lock", 
+            $school, 
+            "All classes belonging to the $school have been locked"
+        );
+
+        if ($result['success']) {
+            echo $result['message'];
+        } else {
+            echo "Error: " . $result['message'];
+        }
+
+        /*
+        $recipients = $this->userModel->getAdminsForMail('admin');
+
+        foreach($recipients as $recipient){
+            if($recipient['email'] == $email) continue;
+            sendMail(
+                    $email, 
+                    $recipient['email'], 
+                    $recipient['name'],
+                    "Classroom lock",
+                    $school,
+                    "All classes belonging to the $school have been unlocked"
+                );
+        }
+        */
     }
 }
 ?>

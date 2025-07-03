@@ -63,11 +63,30 @@ class Timetable{
         return $this->db->results();
     }
 
-    public function getElementsForClash($room_id, $lid, $version){
-        $this->db->query("SELECT course_code, room_id, day_of_week, start_time, end_time, lecturer_id WHERE room_id = :room_id OR lecturer_id = :lid AND version_id = :version");
+    public function getElementsForRoomClash($room_id, $slot){
+        $this->db->query("SELECT * 
+            FROM timetable t
+            JOIN timetable_version v ON t.version_id = v.version_id
+            WHERE t.room_id = :room_id 
+            AND t.slot_id = :slot
+            AND v.is_active = 1
+        ");
         $this->db->bind(':room_id', $room_id);
+        $this->db->bind(':slot', $slot);
+        $this->db->execute();
+        return $this->db->results();
+    }
+
+    public function getElementsForLecturerClash($lid, $slot){
+        $this->db->query("SELECT * 
+            FROM timetable t
+            JOIN timetable_version v ON t.version_id = v.version_id
+            WHERE t.lecturer_id = :lid 
+            AND t.slot_id = :slot
+            AND v.is_active = 1
+        ");
         $this->db->bind(':lid', $lid);
-        $this->db->bind(':version', $version);
+        $this->db->bind(':slot', $slot);
         $this->db->execute();
         return $this->db->results();
     }
