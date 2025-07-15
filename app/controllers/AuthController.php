@@ -165,7 +165,6 @@ class AuthController extends Controller {
 
     public function logout(){
         try {
-            session_start();
 
             $_SESSION = [];
 

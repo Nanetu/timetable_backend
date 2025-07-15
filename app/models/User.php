@@ -96,9 +96,9 @@ class User{
         $this->db->execute();
     }
 
-    public function updateRole($email, $role){
-        $this->db->query("UPDATE user SET role = :role WHERE email = :email");
-        $this->db->bind(':email', $email);
+    public function updateRole($id, $role){
+        $this->db->query("UPDATE user SET role = :role WHERE user_id = :id");
+        $this->db->bind(':id', $id);
         $this->db->bind(':role', $role);
         $this->db->execute();
     }

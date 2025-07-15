@@ -49,17 +49,17 @@ class AdminController extends Controller{
             return;
         }
 
-        $entries = $input['entries'] ?? null;
+        $user = $input['userId'] ?? null;
+        $role = $input['role'] ?? null;
 
-        if (!$entries){
+        if (!$user || !$role){
             http_response_code(400);
-            echo json_encode(['error'=>'Cannot save empty data']);
+            echo json_encode(['error'=>'User ID and role are required']);
             return;
         }
 
-        foreach($entries as $entry){
-            $this->userModel->updateRole($entry['email'], $entry['role']);
-        }
+        $this->userModel->updateRole($user, $role);
+
         echo json_encode(['status' => 'success']);
     }
 
