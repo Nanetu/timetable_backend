@@ -46,10 +46,13 @@ class TimeslotController extends Controller {
             return;
         }
 
-        $school_id = $_GET['school_id'] ?? $_POST['school_id'] ?? null;
-        $program_name = $_GET['program_name'] ?? $_POST['program_name'] ?? null;
+        $program_name = $_GET['program'] ?? $_POST['program'] ?? null;
         $year = $_GET['year'] ?? $_POST['year'] ?? null;
         $rollback = $_GET['rollback'] ?? $_POST['rollback'] ?? 0;
+
+        if ($year !== null) {
+            $year = (int)$year;
+        }
 
         if(!$email){
             http_response_code(400);
@@ -62,15 +65,32 @@ class TimeslotController extends Controller {
         try {
             if ($role == 'admin' && $rollback == 0){
                 $user_id = $this->userModel->getUser($email);
-                $user_id  = $user_id['user_id'];
+                $user_id  = $user_id['user_id'] ?? null;
+                if (!$user_id) {
+                    http_response_code(404);
+                    echo json_encode(['error'=>'User not found']);
+                    return;
+                }
                 $current_year = date('Y');
                 
                 $program_id = $this->programModel->getProgramByName($program_name);
-                $program_id = $program_id['program_id'];
+                $program_id = $program_id['program_id'] ?? null;
+
+                if (!$program_id) {
+                    http_response_code(404);
+                    echo json_encode(['error'=>'Program not found']);
+                    return;
+                }
 
                 $version = $this->versionModel->getVersion($user_id, $current_year, $program_id, $year);
                 if ($version){
                     $version = $version['version_id'];
+                }
+
+                if (!$version) {
+                    http_response_code(404);
+                    echo json_encode(['error'=>'Version not found']);
+                    return;
                 }
 
                 $entries = $this->timetableModel->getTimetableByPidYear($program_id, $year, $version);

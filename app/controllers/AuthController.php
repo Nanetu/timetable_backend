@@ -108,7 +108,7 @@ class AuthController extends Controller {
 
         if(!$email || !$password){
             http_response_code(400);
-            echo json_encode(['error'=>'Cannot save empty data']);
+            echo json_encode(['error'=>'Cannot validate empty data']);
             return;
         }
 
@@ -165,7 +165,23 @@ class AuthController extends Controller {
 
     public function logout(){
         try {
-            session_unset();
+            session_start();
+
+            $_SESSION = [];
+
+            if (ini_get("session.use_cookies")) {
+                $params = session_get_cookie_params();
+                setcookie(
+                    session_name(), 
+                    '', 
+                    time() - 42000,
+                    $params["path"], 
+                    $params["domain"],
+                    $params["secure"], 
+                    $params["httponly"]
+                );
+            }
+
             session_destroy();
             echo json_encode(['status'=>'success']);
         } catch(Exception $e){
@@ -174,17 +190,6 @@ class AuthController extends Controller {
         }
     }
 
-    public function checkSession(){
-        if(isset($_SESSION['email'])){
-            echo json_encode([
-                'logged_in'=>true,
-                'email'=>$_SESSION['email'],
-                'role'=>$_SESSION['role']
-            ]);
-        } else {
-            echo json_encode(['logged_in'=>false]);
-        }
-    }
 }
 
 ?>

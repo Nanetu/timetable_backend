@@ -111,7 +111,7 @@ class User{
     }
 
     public function delete($uid){
-        $this->db->query("DELETE * FROM user WHERE user_id:uid");
+        $this->db->query("DELETE * FROM user WHERE user_id = :uid");
         $this->db->bind(':uid', $uid);
         $this->db->execute();
     }
