@@ -37,7 +37,7 @@ Class DetectClash extends Controller {
             return;
         }
 
-        $slot_id = $this->tsModel->getTimeslotByDse($entry['day'], $entry['start'], $entry['end']);
+        $slot_id = $this->tsModel->getTimeslotByDse($entry['day_of_week'], $entry['start_time'], $entry['end_time']);
 
         if (!$slot_id){
             echo json_encode([
