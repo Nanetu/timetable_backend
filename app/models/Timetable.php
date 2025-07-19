@@ -9,7 +9,7 @@ class Timetable{
     }
 
     public function getTimetableByPidYear($pid, $year, $version){
-        $this->db->query("SELECT  t.course_code, t.slot_id, t.room_id, t.lecturer_id FROM timetable t JOIN timetable_version v ON t.program_id = v.program_id WHERE t.program_id = :pid AND v.year = :year AND t.version_id = :version");
+        $this->db->query("SELECT t.table_id, t.course_code, t.slot_id, t.room_id, t.lecturer_id FROM timetable t JOIN timetable_version v ON t.program_id = v.program_id WHERE t.program_id = :pid AND v.year = :year AND t.version_id = :version");
         $this->db->bind(':pid', $pid);
         $this->db->bind(':year', $year);
         $this->db->bind(':version', $version);

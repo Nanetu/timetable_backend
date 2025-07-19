@@ -181,7 +181,7 @@ class TimeslotController extends Controller {
                     $entry['day_of_week'] = $slot_data['day_of_week'];
                     $entry['lecturer_name'] = $lecturer['name'];
 
-                    unset($entry['table_id'], $entry['program_id'], $entry['slot_id'], $entry['lecturer_id'], $entry['version_id']);
+                    unset($entry['program_id'], $entry['slot_id'], $entry['lecturer_id'], $entry['version_id']);
                 }
                 
                 echo json_encode([
@@ -218,7 +218,7 @@ class TimeslotController extends Controller {
                     $entry['day_of_week'] = $slot_data['day_of_week'];
                     $entry['lecturer_name'] = $lecturer['name'];
 
-                    unset($entry['table_id'], $entry['program_id'], $entry['slot_id'], $entry['lecturer_id'], $entry['version_id']);
+                    unset($entry['program_id'], $entry['slot_id'], $entry['lecturer_id'], $entry['version_id']);
                 }
                 
                 echo json_encode([
