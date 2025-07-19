@@ -12,6 +12,29 @@ Class DetectClash extends Controller {
         $this->versionModel = $this->loadModel("Timetable_Version");
     }
 
+    function compareTimes($arr, $entry){
+        foreach ($arr as $slot) {
+            $slot_id = $slot['slot_id'];
+            $slot_details = $this->tsModel->getTimeslot($slot_id);
+            if (!$slot_details) {
+                continue;
+            }
+
+            // Check if the day_of_week and time range overlaps
+            if ($slot_details['day_of_week'] == $entry['day_of_week']) {
+                $existing_start = strtotime($slot_details['start_time']);
+                $existing_end = strtotime($slot_details['end_time']);
+                $new_start = strtotime($entry['start_time']);
+                $new_end = strtotime($entry['end_time']);
+
+                if (($new_start < $existing_end) && ($new_end > $existing_start)) {
+                    return true;
+                }
+            }
+        }
+    
+    }
+
     function checkClashes(){
 
         if($_SERVER['REQUEST_METHOD'] !== 'POST' ){
@@ -37,9 +60,31 @@ Class DetectClash extends Controller {
             return;
         }
 
-        $slot_id = $this->tsModel->getTimeslotByDse($entry['day_of_week'], $entry['start_time'], $entry['end_time']);
+        $Lslost = $this->timetableModel->getSlotsByLid($entry['lecturer_id']);
+        $Rslots = $this->timetableModel->getSlotsByRoom($entry['room_id']);
+        $slots = array_merge($Lslost, $Rslots);
+        if (empty($slots)){
+            echo json_encode([
+                'status'=>'success',
+                'type'=>'none',
+                'message'=>'No clashing events were found'  
+            ]);
+            return;
+        }
 
-        if (!$slot_id){
+        $Lclash = $this->compareTimes($Lslost, $entry);
+        $Rclash = $this->compareTimes($Rslots, $entry);
+
+        if ($Lclash && $Rclash){
+            $message = 'Clash detected with both lecturer and room';
+            $type = 'both';
+        } else if ($Lclash) {
+            $message = 'Clash detected with lecturer';
+            $type = 'lecturer';
+        } else if ($Rclash) {
+            $message = 'Clash detected with room';
+            $type = 'room';
+        } else {
             echo json_encode([
                 'status'=>'success',
                 'type'=>'none',
@@ -47,35 +92,12 @@ Class DetectClash extends Controller {
             ]);
             return;
         }
-        $slot_id = $slot_id['slot_id'];
 
-        $test_room = $this->timetableModel->getElementsForRoomClash($entry['room_id'], $slot_id);
-        $test_lecturer = $this->timetableModel->getElementsForLecturerClash($entry['lecturer_id'], $slot_id);
-        if(!$test_room && !$test_lecturer){
-            echo json_encode([
-                'status'=>'success',
-                'type'=>'none',
-                'message'=>'No clashing events were found'
-            ]);
-        } else if(!$test_room && $test_lecturer){
-            echo json_encode([
-                'status'=>'failure',
-                'type'=>'lecturer',
-                'message'=>'The selected lecturer already has a session during this timeslot.'
-            ]);
-        } else if($test_room && !$test_lecturer){
-            echo json_encode([
-                'status'=>'failure',
-                'type'=>'classroom',
-                'message'=>'The selected classroom already has a session during this timeslot.'
-            ]);
-        } else {
-            echo json_encode([
-                'status'=>'failure',
-                'type'=>'both',
-                'message'=>'Clash detected for both the lecturer and classroom in that timeslot'
-            ]);
-        }
+        echo json_encode([
+            'status' => 'failure',
+            'type' => $type,
+            'message' => $message
+        ]);
 
     }
 }

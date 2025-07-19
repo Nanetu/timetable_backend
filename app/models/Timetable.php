@@ -17,6 +17,20 @@ class Timetable{
         return $this->db->results();
     }
 
+    public function getSlotsByLid($lid){
+        $this->db->query("SELECT t.slot_id FROM timetable t JOIN timetable_version v ON t.version_id = v.version_id WHERE t.lecturer_id = :lid AND v.is_active = 1");
+        $this->db->bind(':lid', $lid);
+        $this->db->execute();
+        return $this->db->results();
+    }
+
+    public function getSlotsByRoom($room_id){
+        $this->db->query("SELECT t.slot_id FROM timetable t JOIN timetable_version v ON t.version_id = v.version_id WHERE t.room_id = :room_id AND v.is_active = 1");
+        $this->db->bind(':room_id', $room_id);
+        $this->db->execute();
+        return $this->db->results();
+    }
+
     public function addTimetable($code, $pid, $lid, $room, $slot, $version){
         $this->db->query("INSERT INTO timetable(course_code, program_id, lecturer_id, room_id, slot_id, version_id) VALUES (:code, :pid, :lid, :room, :slot, :version)");
         $this->db->bind(':code', $code);
