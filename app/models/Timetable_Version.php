@@ -1,3 +1,4 @@
+
 <?php
 
 class Timetable_Version{
@@ -54,12 +55,23 @@ class Timetable_Version{
         $this->db->execute();
     }
 
-    public function rollback($version_id) {
-        $this->db->query("SELECT previous_version_id FROM timetable_version WHERE version_id = :version_id LIMIT 1");
+    public function rollback($version_id, $program_id, $year) {
+        $this->db->query("SELECT previous_version_id FROM timetable_version WHERE version_id = :version_id AND program_id = :program_id AND year = :year LIMIT 1");
         $this->db->bind(":version_id", $version_id);
+        $this->db->bind(':program_id', $program_id);
+        $this->db->bind(':year', $year);
         $this->db->execute();
         return $this->db->result();
-}
+    }
+
+    public function getNextVersion($current_version_id, $program_id, $year) {
+        $this->db->query("SELECT * FROM timetable_version WHERE previous_version_id = :current_version_id AND program_id = :program_id AND year = :year ORDER BY created_at ASC LIMIT 1");
+        $this->db->bind(':current_version_id', $current_version_id);
+        $this->db->bind(':program_id', $program_id);
+        $this->db->bind(':year', $year);
+        $this->db->execute();
+        return $this->db->result();
+    }
 }
 
 ?>

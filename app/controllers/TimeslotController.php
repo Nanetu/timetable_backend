@@ -1,5 +1,6 @@
 <?php
-class TimeslotController extends Controller {
+class TimeslotController extends Controller
+{
 
     private $userModel;
     private $versionModel;
@@ -14,8 +15,9 @@ class TimeslotController extends Controller {
     private $classModel;
     private $courseProgramModel;
 
-    public function __construct() {
-        
+    public function __construct()
+    {
+
         $this->userModel = $this->loadModel("User");
         $this->versionModel = $this->loadModel("Timetable_Version");
         $this->timetableModel = $this->loadModel("Timetable");
@@ -30,12 +32,14 @@ class TimeslotController extends Controller {
         $this->courseProgramModel = $this->loadModel("Course_Program");
     }
 
-    public function determine_role($email){
+    public function determine_role($email)
+    {
         $role = $this->userModel->getRole($email);
         return $role['role'];
     }
 
-    public function view_timetable(){
+    public function view_timetable()
+    {
 
         $this->setJsonHeaders();
 
@@ -54,42 +58,42 @@ class TimeslotController extends Controller {
             $year = (int)$year;
         }
 
-        if(!$email){
+        if (!$email) {
             http_response_code(400);
-            echo json_encode(['error'=>'Email is required']);
+            echo json_encode(['error' => 'Email is required']);
             return;
         }
 
         $role = $this->determine_role($email);
 
         try {
-            if ($role == 'admin' && $rollback == 0){
+            if ($role == 'admin' && $rollback == 0) {
                 $user_id = $this->userModel->getUser($email);
                 $user_id  = $user_id['user_id'] ?? null;
                 if (!$user_id) {
                     http_response_code(404);
-                    echo json_encode(['error'=>'User not found']);
+                    echo json_encode(['error' => 'User not found']);
                     return;
                 }
                 $current_year = date('Y');
-                
+
                 $program_id = $this->programModel->getProgramByName($program_name);
                 $program_id = $program_id['program_id'] ?? null;
 
                 if (!$program_id) {
                     http_response_code(404);
-                    echo json_encode(['error'=>'Program not found']);
+                    echo json_encode(['error' => 'Program not found']);
                     return;
                 }
 
                 $version = $this->versionModel->getVersion($user_id, $current_year, $program_id, $year);
-                if ($version){
+                if ($version) {
                     $version = $version['version_id'];
                 }
 
                 if (!$version) {
                     http_response_code(404);
-                    echo json_encode(['error'=>'Version not found']);
+                    echo json_encode(['error' => 'Version not found']);
                     return;
                 }
 
@@ -111,28 +115,30 @@ class TimeslotController extends Controller {
                     }
                     unset($entry['slot_id']);
                 }
-                
+
                 echo json_encode([
                     'status' => 'success',
                     'role' => 'admin',
                     'entries' => $entries,
                 ]);
-            
-            } else if ($role == 'admin' && $rollback == 1){
+            } else if ($role == 'admin' && $rollback == 1) {
                 $user_id = $this->userModel->getUser($email);
                 $user_id  = $user_id['user_id'];
                 $current_year = date('Y');
-                
+
                 $program_id = $this->programModel->getProgramByName($program_name);
                 $program_id = $program_id['program_id'];
 
                 $version = $this->versionModel->getVersion($user_id, $current_year, $program_id, $year);
-                if ($version){
+                if ($version) {
                     $version = $version['version_id'];
                 }
-                $previous_id = $this->versionModel->rollback($version);
-                if ($previous_id){
+                $previous_id = $this->versionModel->rollback($version, $program_id, $year);
+                if ($previous_id) {
                     $previous_id = $previous_id['previous_version_id'];
+                } else {
+                    // If no previous version, stay at current
+                    $previous_id = $version;
                 }
 
                 $entries = $this->timetableModel->getTimetableByPidYear($program_id, $year, $previous_id);
@@ -157,13 +163,62 @@ class TimeslotController extends Controller {
                     unset($entry['slot_id']);
                 }
 
-                
+
                 echo json_encode([
                     'status' => 'success',
                     'role' => 'admin',
                     'entries' => $entries,
                 ]);
-                
+            } else if ($role == 'admin' && $rollback == -1) {
+                $user_id = $this->userModel->getUser($email);
+                $user_id  = $user_id['user_id'];
+                $current_year = date('Y');
+
+                $program_id = $this->programModel->getProgramByName($program_name);
+                $program_id = $program_id['program_id'];
+
+                // Get current version
+                $version = $this->versionModel->getVersion($user_id, $current_year, $program_id, $year);
+                if ($version) {
+                    $version = $version['version_id'];
+                }
+
+                // Find the next version in the chain (unrollback)
+                $next_version = $this->versionModel->getNextVersion($version, $program_id, $year);
+                if ($next_version) {
+                    $next_version_id = $next_version['version_id'];
+                } else {
+                    // If no next version, stay at current
+                    $next_version_id = $version;
+                }
+
+                $entries = $this->timetableModel->getTimetableByPidYear($program_id, $year, $next_version_id);
+
+                foreach ($entries as &$entry) {
+                    $slot_id = $entry['slot_id'];
+                    $slot_data = $this->tsModel->getTimeslot($slot_id);
+
+                    $lecturer_id = $entry['lecturer_id'];
+                    $lecturer = $this->userModel->getUserName($lecturer_id);
+
+                    // Append the slot data to the entry
+                    $entry['start_time'] = $slot_data['start_time'];
+                    $entry['end_time'] = $slot_data['end_time'];
+                    $entry['day_of_week'] = $slot_data['day_of_week'];
+                    $entry['lecturer_name'] = $lecturer['name'];
+
+                    if (isset($entry['event_id'])) {
+                        $entry['event_id'] = $entry['event_id'];
+                    }
+
+                    unset($entry['slot_id']);
+                }
+
+                echo json_encode([
+                    'status' => 'success',
+                    'role' => 'admin',
+                    'entries' => $entries,
+                ]);
             } else if ($role == 'lecturer') {
                 $user_id = $this->userModel->getUser($email);
                 $user_id  = $user_id['user_id'];
@@ -189,14 +244,13 @@ class TimeslotController extends Controller {
 
                     unset($entry['program_id'], $entry['slot_id'], $entry['lecturer_id'], $entry['version_id']);
                 }
-                
+
                 echo json_encode([
                     'status' => 'success',
                     'role' => 'lecturer',
                     'entries' => $entries,
                 ]);
-
-            } else if ($role == 'student'){
+            } else if ($role == 'student') {
                 $user_id = $this->userModel->getUser($email);
                 $user_id  = $user_id['user_id'];
                 $school = $this->userModel->getSchool($email);
@@ -206,7 +260,7 @@ class TimeslotController extends Controller {
                 $current_year = date('Y');
                 $courses = $this->registrationModel->getAllRegistrationCoursesForYear($user_id, $current_year);
                 $entries = [];
-                foreach ($courses as $course){
+                foreach ($courses as $course) {
                     $temp = $this->timetableModel->getTimetableByCourseCode($course['course_code']);
                     $entries = array_merge($entries, $temp);
                 }
@@ -226,50 +280,48 @@ class TimeslotController extends Controller {
 
                     unset($entry['program_id'], $entry['slot_id'], $entry['lecturer_id'], $entry['version_id']);
                 }
-                
+
                 echo json_encode([
                     'status' => 'success',
                     'role' => 'student',
                     'entries' => $entries,
                 ]);
-
             } else {
                 http_response_code(404);
-                echo json_encode(['error'=>'User not in database']);
+                echo json_encode(['error' => 'User not in database']);
             }
         } catch (Exception $e) {
             http_response_code(500);
-            echo json_encode(['error'=>'Internal Server Error']);
+            echo json_encode(['error' => 'Internal Server Error']);
         }
-        
-
     }
 
-    public function saveEntries(){
+    public function saveEntries()
+    {
 
-        if($_SERVER['REQUEST_METHOD'] !== 'POST' ){
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
             http_response_code(405);
-            echo json_encode(['error'=>'Method not allowed']);
+            echo json_encode(['error' => 'Method not allowed']);
             return;
         }
 
         $input = json_decode(file_get_contents('php://input'), true);
 
         $email = $_SESSION['email'];
-        if (!$email){
+        if (!$email) {
             http_response_code(400);
-            echo json_encode(['error'=>'User not authenticated']);
+            echo json_encode(['error' => 'User not authenticated']);
             return;
         }
 
         $entries = $input['entries'] ?? null;
 
-        if (!$entries){
+        if (!$entries) {
             http_response_code(400);
-            echo json_encode(['error'=>'Cannot save empty data']);
+            echo json_encode(['error' => 'Cannot save empty data']);
             return;
         }
-            
+
         try {
             $user_id = $this->userModel->getUser($email);
             $current_year = date('Y');
@@ -291,7 +343,7 @@ class TimeslotController extends Controller {
 
             // Add new version
             $this->versionModel->addVersion($current_year, $user_id['user_id'], $previous, $program_id, $course_year);
-            
+
 
             // Immediately fetch it back
             $new_version = $this->versionModel->getVersion($user_id['user_id'], $current_year, $program_id, $course_year);
@@ -310,17 +362,16 @@ class TimeslotController extends Controller {
                 'status' => 'success',
                 'message' => 'Entries saved successfully',
             ]);
-
         } catch (Exception $e) {
             http_response_code(500);
             echo json_encode(['error' => $e->getMessage()]);
         }
-
     }
 
-    public function addEntry($code, $program_id, $start, $end, $day, $lecturer, $room, $version, $event){
+    public function addEntry($code, $program_id, $start, $end, $day, $lecturer, $room, $version, $event)
+    {
         $slot_id = $this->tsModel->getTimeslotByDse($day, $start, $end);
-        if(!$slot_id){
+        if (!$slot_id) {
             $this->tsModel->addTimeslot($day, $start, $end);
             $slot_id = $this->tsModel->getTimeslotByDse($day, $start, $end);
         }
@@ -328,13 +379,14 @@ class TimeslotController extends Controller {
         $this->timetableModel->addTimetable($code, $program_id, $lecturer, $room, $slot_id['slot_id'], $version, $event_id);
     }
 
-    public function getSchools(){
+    public function getSchools()
+    {
 
         $this->setJsonHeaders();
 
         $university = $_GET['university'] ?? $_POST['university'] ?? null;
 
-        if(!$university){
+        if (!$university) {
             echo json_encode(['error' => 'No university provided']);
             return;
         }
@@ -343,18 +395,19 @@ class TimeslotController extends Controller {
         $schools = $this->schoolModel->getAllSchools($university_id);
 
         echo json_encode([
-                'status' => 'success',
-                'schools' => $schools,
+            'status' => 'success',
+            'schools' => $schools,
         ]);
     }
 
-    public function getPrograms(){
+    public function getPrograms()
+    {
 
         $this->setJsonHeaders();
 
         $school = $_GET['school'] ?? $_POST['school'] ?? null;
 
-        if(!$school){
+        if (!$school) {
             echo json_encode(['error' => 'No school provided']);
             return;
         }
@@ -371,19 +424,20 @@ class TimeslotController extends Controller {
         }
 
         echo json_encode([
-                'status' => 'success',
-                'programs' => $programs,
+            'status' => 'success',
+            'programs' => $programs,
         ]);
     }
 
-    public function getCourses(){
+    public function getCourses()
+    {
 
         $this->setJsonHeaders();
 
         $program = $_GET['program'] ?? $_POST['program'] ?? null;
         $year = $_GET['year'] ?? $_POST['year'] ?? null;
 
-        if(!$program || !$year){
+        if (!$program || !$year) {
             echo json_encode(['error' => 'no data recieved']);
             return;
         }
@@ -393,12 +447,13 @@ class TimeslotController extends Controller {
         $courses = $this->courseProgramModel->getCourseByPidYear($program, $year);
 
         echo json_encode([
-            'status'=>'success',
-            'courses'=>$courses,
+            'status' => 'success',
+            'courses' => $courses,
         ]);
     }
 
-    public function getLecturers(){
+    public function getLecturers()
+    {
 
         $this->setJsonHeaders();
 
@@ -412,7 +467,7 @@ class TimeslotController extends Controller {
         $school = $this->userModel->getSchool($email);
         $school = $school['school_id'];
 
-        if(!$school){
+        if (!$school) {
             echo json_encode(['error' => 'No school provided']);
             return;
         }
@@ -421,12 +476,13 @@ class TimeslotController extends Controller {
         $lecturers = $this->userModel->getLecturerBySid($school);
 
         echo json_encode([
-                'status' => 'success',
-                'lecturers' => $lecturers,
+            'status' => 'success',
+            'lecturers' => $lecturers,
         ]);
     }
 
-    public function getClassrooms(){
+    public function getClassrooms()
+    {
         $this->setJsonHeaders();
 
         $email = $_SESSION['email'] ?? null;
@@ -439,7 +495,7 @@ class TimeslotController extends Controller {
         $school = $this->userModel->getSchool($email);
         $school = $school['school_id'];
 
-        if(!$school){
+        if (!$school) {
             echo json_encode(['error' => 'No school provided']);
             return;
         }
@@ -448,12 +504,13 @@ class TimeslotController extends Controller {
         $classes = $this->classModel->getAllClassrooms($school_id);
 
         echo json_encode([
-            'status'=>'success',
-            'classes'=>$classes,
+            'status' => 'success',
+            'classes' => $classes,
         ]);
     }
 
-    public function lockClassrooms(){
+    public function lockClassrooms()
+    {
         $this->setJsonHeaders();
 
         $email = $_SESSION['email'] ?? null;
@@ -463,28 +520,30 @@ class TimeslotController extends Controller {
             return;
         }
 
-        $school = $_GET['school'] ?? $_POST['school'] ?? null;
+        $school = $this->userModel->getSchool($email);
+        $school = $school['school_id'];
 
-        if(!$school){
+        if (!$school) {
             echo json_encode(['error' => 'No data provided']);
             return;
         }
-        $school_id = $this->schoolModel->getSchoolByName($school);
 
-        $this->classModel->classroomLock($school_id, 1);
-        echo json_encode(['status'=>'success']);
+        $school_name = $this->schoolModel->getSchool($school);
+        $school_name = $school_name['school_name'];
+
+        $this->classModel->classroomLock($school, 1);
 
         $result = sendMail(
-            $email, 
-            "mushongomananetu@gmail.com", 
-            "Nanetu", 
-            "Classroom lock", 
-            $school, 
-            "All classes belonging to the $school have been locked"
+            $email,
+            "mushongomananetu@gmail.com",
+            "Nanetu",
+            "Classroom lock",
+            $school,
+            "All classes belonging to the $school_name have been locked"
         );
 
         if ($result['success']) {
-            echo $result['message'];
+            echo json_encode(['status' => 'success', 'message' => $result['message']]);
         } else {
             echo "Error: " . $result['message'];
         }
@@ -507,7 +566,8 @@ class TimeslotController extends Controller {
         */
     }
 
-    public function releaseClassrooms(){
+    public function releaseClassrooms()
+    {
         $this->setJsonHeaders();
 
         $email = $_SESSION['email'] ?? null;
@@ -517,29 +577,30 @@ class TimeslotController extends Controller {
             return;
         }
 
-        $school = $_GET['school'] ?? $_POST['school'] ?? null;
+        $school = $this->userModel->getSchool($email);
+        $school = $school['school_id'];
 
-        if(!$school){
+        if (!$school) {
             echo json_encode(['error' => 'No data provided']);
             return;
         }
-        $school_id = $this->schoolModel->getSchoolByName($school);
 
-        $this->classModel->classroomLock($school_id, 0);
+        $school_name = $this->schoolModel->getSchool($school);
+        $school_name = $school_name['school_name'];
 
-        echo json_encode(['status'=>'success']);
+        $this->classModel->classroomLock($school, 0);
 
         $result = sendMail(
-            $email, 
-            "mushongomananetu@gmail.com", 
-            "Nanetu", 
-            "Classroom lock", 
-            $school, 
-            "All classes belonging to the $school have been locked"
+            $email,
+            "mushongomananetu@gmail.com",
+            "Nanetu",
+            "Classroom lock",
+            $school,
+            "All classes belonging to the $school_name have been unlocked"
         );
 
         if ($result['success']) {
-            echo $result['message'];
+            echo json_encode(['status' => 'success', 'message' => $result['message']]);
         } else {
             echo "Error: " . $result['message'];
         }
@@ -561,4 +622,3 @@ class TimeslotController extends Controller {
         */
     }
 }
-?>

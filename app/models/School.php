@@ -22,6 +22,13 @@ class School{
         return $this->db->result();
     }
 
+    public function getSchool($id){
+        $this->db->query("SELECT school_name FROM school WHERE school_id = :id");
+        $this->db->bind(':id', $id);
+        $this->db->execute();
+        return $this->db->result();
+    }
+
     public function addSchool($name, $uid){
         $this->db->query("INSERT INTO school(school_name, university_id) VALUES (:name, :uid)");
         $this->db->bind(':name', $name);

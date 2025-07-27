@@ -17,7 +17,7 @@ function sendMail ($from, $to, $name, $subject, $school, $body){
         $mail->Host = 'smtp.gmail.com';
         $mail->SMTPAuth = true;
         $mail->Username = 'nanetumushongoma@gmail.com';
-        $mail->Password = 'your_app_password';
+        $mail->Password = 'eqgm xima ohhz ljtv';
         $mail->SMTPSecure = 'tls';
         $mail->Port = 587;
     
