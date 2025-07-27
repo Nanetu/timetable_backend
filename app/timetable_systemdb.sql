@@ -172,6 +172,7 @@ CREATE TABLE `registration` (
 
 CREATE TABLE `timetable` (
   `table_id` int(11) NOT NULL,
+  `event_id` varchar(255) NOT NULL,
   `course_code` varchar(20) NOT NULL,
   `program_id` int(11) NOT NULL,
   `lecturer_id` int(11) NOT NULL,

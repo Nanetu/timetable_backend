@@ -28,11 +28,16 @@ Class DetectClash extends Controller {
                 $new_end = strtotime($entry['end_time']);
 
                 if (($new_start < $existing_end) && ($new_end > $existing_start)) {
+                    // Check event_id
+                    if ($slot['event_id'] == $entry['id']) {
+                        // Same event, not a clash
+                        continue;
+                    }
                     return true;
                 }
             }
         }
-    
+        return false;
     }
 
     function checkClashes(){

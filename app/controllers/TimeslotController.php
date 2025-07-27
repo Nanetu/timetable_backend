@@ -106,7 +106,9 @@ class TimeslotController extends Controller {
                     $entry['end_time'] = $slot_data['end_time'];
                     $entry['day_of_week'] = $slot_data['day_of_week'];
                     $entry['lecturer_name'] = $lecturer['name'];
-
+                    if (isset($entry['event_id'])) {
+                        $entry['event_id'] = $entry['event_id'];
+                    }
                     unset($entry['slot_id']);
                 }
                 
@@ -147,6 +149,10 @@ class TimeslotController extends Controller {
                     $entry['end_time'] = $slot_data['end_time'];
                     $entry['day_of_week'] = $slot_data['day_of_week'];
                     $entry['lecturer_name'] = $lecturer['name'];
+
+                    if (isset($entry['event_id'])) {
+                        $entry['event_id'] = $entry['event_id'];
+                    }
 
                     unset($entry['slot_id']);
                 }
@@ -297,7 +303,7 @@ class TimeslotController extends Controller {
 
             // Insert timetable entries
             foreach ($entries as $entry) {
-                $this->addEntry($entry['course_id'], $program_id, $entry['start_time'], $entry['end_time'], $entry['day_of_week'], $entry['lecturer_id'], $entry['room_id'], $new_version_id);
+                $this->addEntry($entry['course_id'], $program_id, $entry['start_time'], $entry['end_time'], $entry['day_of_week'], $entry['lecturer_id'], $entry['room_id'], $new_version_id, $entry['id']);
             }
 
             echo json_encode([
@@ -312,13 +318,14 @@ class TimeslotController extends Controller {
 
     }
 
-    public function addEntry($code, $program_id, $start, $end, $day, $lecturer, $room, $version){
+    public function addEntry($code, $program_id, $start, $end, $day, $lecturer, $room, $version, $event){
         $slot_id = $this->tsModel->getTimeslotByDse($day, $start, $end);
         if(!$slot_id){
             $this->tsModel->addTimeslot($day, $start, $end);
             $slot_id = $this->tsModel->getTimeslotByDse($day, $start, $end);
         }
-        $this->timetableModel->addTimetable($code, $program_id, $lecturer, $room, $slot_id['slot_id'], $version);
+        $event_id = $event;
+        $this->timetableModel->addTimetable($code, $program_id, $lecturer, $room, $slot_id['slot_id'], $version, $event_id);
     }
 
     public function getSchools(){
