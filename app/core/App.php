@@ -67,6 +67,7 @@ class App {
         $this->router->addRoute('GET', '/timetable/courses', 'TimeslotController', 'getCourses');
         $this->router->addRoute('GET', '/timetable/lecturers', 'TimeslotController', 'getLecturers');
         $this->router->addRoute('GET', '/timetable/classes', 'TimeslotController', 'getClassrooms');
+        $this->router->addRoute('GET', '/timetable/check_lock', 'TimeslotController', 'checkLock');
         $this->router->addRoute('GET', '/timetable/lock', 'TimeslotController', 'lockClassrooms');
         $this->router->addRoute('GET', '/timetable/release', 'TimeslotController', 'releaseClassrooms');
         $this->router->addRoute('GET', '/pending', 'AdminController', 'getPendingUsers');

@@ -8,8 +8,9 @@ class Course{
         $this->db = new Database();
     }
 
-    public function addCourse($code, $name){
-        $this->db->query("INSERT INTO course(course_code, course_name) VALUES (:code, :name)");
+    public function addCourse($version, $code, $name){
+        $this->db->query("INSERT INTO course(course_version, course_code, course_name) VALUES (:version, :code, :name)");
+        $this->db->bind(':version', $version);
         $this->db->bind(':code', $code);
         $this->db->bind(':name', $name);
         $this->db->execute();

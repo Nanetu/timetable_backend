@@ -9,7 +9,7 @@ class Registration{
     }
 
     public function getAllRegistrationCoursesForYear($user, $year){
-        $this->db->query("SELECT * FROM registration WHERE student_id = :user and registration_date = :year");
+        $this->db->query("SELECT course_code FROM registration WHERE student_id = :user and registration_date = :year");
         $this->db->bind(':user', $user);
         $this->db->bind(':year', $year);
         $this->db->execute();

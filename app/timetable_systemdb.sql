@@ -76,6 +76,7 @@ CREATE TABLE `program` (
 --
 
 CREATE TABLE `course` (
+  `course_version` int(11) NOT NULL,
   `course_code` varchar(20) NOT NULL,
   `course_name` varchar(100) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
@@ -89,7 +90,8 @@ CREATE TABLE `course` (
 CREATE TABLE `course_program` (
   `course_code` varchar(20) NOT NULL,
   `program_id` int(11) NOT NULL,
-  `year` int(11) NOT NULL
+  `year` int(11) NOT NULL,
+  `course_version` int(11) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
@@ -174,7 +176,7 @@ CREATE TABLE `timetable` (
   `table_id` int(11) NOT NULL,
   `event_id` varchar(255) NOT NULL,
   `course_code` varchar(20) NOT NULL,
-  `program_id` int(11) NOT NULL,
+  `course_version` int(11) NOT NULL,
   `lecturer_id` int(11) NOT NULL,
   `room_id` varchar(11) NOT NULL,
   `slot_id` int(11) NOT NULL,
@@ -216,7 +218,8 @@ ALTER TABLE `program`
 -- Indexes for table `course`
 --
 ALTER TABLE `course`
-  ADD PRIMARY KEY (`course_code`);
+  ADD PRIMARY KEY (`course_version`),
+  ADD UNIQUE KEY `course_code_version` (`course_code`, `course_version`);
 
 --
 -- Indexes for table `course_program`
@@ -224,7 +227,8 @@ ALTER TABLE `course`
 ALTER TABLE `course_program`
   ADD PRIMARY KEY (`course_code`, `program_id`),
   ADD KEY `course_program_course_code` (`course_code`),
-  ADD KEY `course_program_program_id_idx` (`program_id`);
+  ADD KEY `course_program_program_id_idx` (`program_id`),
+  ADD KEY `course_program_coursev_idx` (`course_version`);
 
 --
 -- Indexes for table `classroom`
@@ -268,7 +272,7 @@ ALTER TABLE `registration`
 ALTER TABLE `timetable`
   ADD PRIMARY KEY (`table_id`),
   ADD KEY `timetable_course_code_idx` (`course_code`),
-  ADD KEY `timetable_program_id_idx` (`program_id`),
+  ADD KEY `timetable_coursev_idx` (`course_version`),
   ADD KEY `timetable_lecturer_id_idx` (`lecturer_id`),
   ADD KEY `timetable_room_id_idx` (`room_id`),
   ADD KEY `timetable_slot_id_idx` (`slot_id`),
@@ -279,6 +283,7 @@ ALTER TABLE `timetable`
 --
 
 ALTER TABLE university MODIFY university_id INT(11) NOT NULL AUTO_INCREMENT;
+ALTER TABLE course MODIFY course_version INT(11) NOT NULL AUTO_INCREMENT;
 ALTER TABLE school MODIFY school_id INT(11) NOT NULL AUTO_INCREMENT;
 ALTER TABLE department MODIFY department_id INT(11) NOT NULL AUTO_INCREMENT;
 ALTER TABLE program MODIFY program_id INT(11) NOT NULL AUTO_INCREMENT;
@@ -316,7 +321,8 @@ ALTER TABLE `program`
 --
 ALTER TABLE `course_program`
   ADD CONSTRAINT `course_program_course_fk` FOREIGN KEY (`course_code`) REFERENCES `course` (`course_code`) ON DELETE CASCADE ON UPDATE CASCADE,
-  ADD CONSTRAINT `course_program_program_fk` FOREIGN KEY (`program_id`) REFERENCES `program` (`program_id`) ON DELETE CASCADE ON UPDATE CASCADE;
+  ADD CONSTRAINT `course_program_program_fk` FOREIGN KEY (`program_id`) REFERENCES `program` (`program_id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  ADD CONSTRAINT `course_program_coursev_fk` FOREIGN KEY (`course_version`) REFERENCES `course` (`course_version`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 --
 -- Constraints for table `classroom`
@@ -350,7 +356,7 @@ ALTER TABLE `registration`
 ALTER TABLE `timetable`
   ADD CONSTRAINT `timetable_course_fk` FOREIGN KEY (`course_code`) REFERENCES `course` (`course_code`) ON DELETE CASCADE ON UPDATE CASCADE,
   ADD CONSTRAINT `timetable_lecturer_fk` FOREIGN KEY (`lecturer_id`) REFERENCES `user` (`user_id`) ON DELETE CASCADE ON UPDATE CASCADE,
-  ADD CONSTRAINT `timetable_program_fk` FOREIGN KEY (`program_id`) REFERENCES `program` (`program_id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  ADD CONSTRAINT `timetable_coursev_fk` FOREIGN KEY (`course_version`) REFERENCES `course` (`course_version`) ON DELETE CASCADE ON UPDATE CASCADE,
   ADD CONSTRAINT `timetable_room_fk` FOREIGN KEY (`room_id`) REFERENCES `classroom` (`room_id`) ON DELETE CASCADE ON UPDATE CASCADE,
   ADD CONSTRAINT `timetable_slot_fk` FOREIGN KEY (`slot_id`) REFERENCES `timeslot` (`slot_id`) ON DELETE CASCADE ON UPDATE CASCADE,
   ADD CONSTRAINT `timetable_version_fk` FOREIGN KEY (`version_id`) REFERENCES `timetable_version` (`version_id`) ON DELETE CASCADE ON UPDATE CASCADE;

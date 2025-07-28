@@ -37,6 +37,21 @@ class Course_Program{
         $this->db->bind(':id', $id);
         $this->db->execute();
     }
+
+    public function getCourseVersionsByProgramYear($program_id, $year) {
+        $this->db->query("SELECT course_version FROM course_program WHERE program_id = :program_id AND year = :year");
+        $this->db->bind(':program_id', $program_id);
+        $this->db->bind(':year', $year);
+        $this->db->execute();
+        return $this->db->results();
+    }
+
+    public function getCourseByCode($code) {
+        $this->db->query("SELECT course_version FROM course WHERE course_code = :code");
+        $this->db->bind(':code', $code);
+        $this->db->execute();
+        return $this->db->result();
+    }
 }
 
 ?>

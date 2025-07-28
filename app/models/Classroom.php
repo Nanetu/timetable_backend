@@ -47,6 +47,14 @@ class Classroom{
         return $this->db->result();
     }
 
+    public function isClassroomLocked($id){
+        $this->db->query("SELECT locked FROM classroom WHERE school_id = :id");
+        $this->db->bind(':id', $id);
+        $this->db->execute();
+        $result = $this->db->result();
+        return $result ? (bool)$result['locked'] : false;
+    }
+
     public function delete($id){
         $this->db->query("DELETE FROM classroom WHERE classroom_id = :id");
         $this->db->bind(':id', $id);
