@@ -1,15 +1,11 @@
 <?php
 Class DetectClash extends Controller {
-    private $userModel;
     private $tsModel;
     private $timetableModel;
-    private $versionModel;
 
     public function __construct() {
-        $this->userModel = $this->loadModel("User");
         $this->tsModel = $this->loadModel("Timeslot");
         $this->timetableModel = $this->loadModel("Timetable");
-        $this->versionModel = $this->loadModel("Timetable_Version");
     }
 
     function compareTimes($arr, $entry){

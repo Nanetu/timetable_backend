@@ -6,7 +6,6 @@ class Timetable_Version{
 
     public function __construct()
     {
-        //require_once 'app\core\Database.php';
         $this->db = new Database();
     }
 

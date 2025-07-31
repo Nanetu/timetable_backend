@@ -73,6 +73,7 @@ class App {
         $this->router->addRoute('GET', '/pending', 'AdminController', 'getPendingUsers');
         $this->router->addRoute('POST', '/update_pending', 'AdminController', 'addRoles');
         $this->router->addRoute('POST', '/clash_detect', 'DetectClash', 'checkClashes');
+        $this->router->addRoute('POST', '/free_slots', 'SuggestedSlots', 'findSlots');
     }
     
     public function run() {
