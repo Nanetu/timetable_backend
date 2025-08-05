@@ -8,11 +8,16 @@ class Course{
         $this->db = new Database();
     }
 
-    public function addCourse($version, $code, $name){
-        $this->db->query("INSERT INTO course(course_version, course_code, course_name) VALUES (:version, :code, :name)");
-        $this->db->bind(':version', $version);
+    public function addCourse($code, $name){
+        $this->db->query("INSERT INTO course(course_code, course_name) VALUES (:code, :name)");
         $this->db->bind(':code', $code);
         $this->db->bind(':name', $name);
+        $this->db->execute();
+    }
+
+    public function getVersion($code){
+        $this->db->query("SELECT course_version FROM course WHERE course_code = :code");
+        $this->db->bind(':code', $code);
         $this->db->execute();
     }
 

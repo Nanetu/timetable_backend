@@ -586,11 +586,11 @@ class TimeslotController extends Controller
             "All classes belonging to the $school_name have been locked"
         );
 
-        if ($result['success']) {
-            echo json_encode(['message' => $result['message']]);
-        } else {
-            echo json_encode(['error'=>$result['message']]);
-        }
+        // if ($result['success']) {
+        //     echo json_encode(['message' => $result['message']]);
+        // } else {
+        //     echo json_encode(['error'=>$result['message']]);
+        // }
 
         /*
         $recipients = $this->userModel->getAdminsForMail('admin');
@@ -644,11 +644,11 @@ class TimeslotController extends Controller
             "All classes belonging to the $school_name have been unlocked"
         );
 
-        if ($result['success']) {
-            echo json_encode(['message' => $result['message']]);
-        } else {
-            echo json_encode(['error'=>$result['message']]);
-        }
+        // if ($result['success']) {
+        //     echo json_encode(['message' => $result['message']]);
+        // } else {
+        //     echo json_encode(['error'=>$result['message']]);
+        // }
 
         /*
         $recipients = $this->userModel->getAdminsForMail('admin');

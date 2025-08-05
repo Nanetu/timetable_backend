@@ -24,11 +24,12 @@ class Course_Program{
         return $this->db->results();
     }
 
-    public function addCourse($code, $pid, $year){
-        $this->db->query("INSERT INTO course(course_code, program_id, year) VALUES (:code, :pid, :year)");
+    public function addCourseProgram($code, $pid, $year, $version){
+        $this->db->query("INSERT INTO course(course_code, program_id, year, course_version) VALUES (:code, :pid, :year, :version)");
         $this->db->bind(':code', $code);
         $this->db->bind(':pid', $pid);
         $this->db->bind(':year', $year);
+        $this->db->bind(':version', $version);
         $this->db->execute();
     }
 

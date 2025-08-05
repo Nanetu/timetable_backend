@@ -50,15 +50,14 @@ class App {
     private function setupRoutes() {
         $this->router->setBasePath('/timetable_backend');
 
-        // API Routes
+        // Auth Routs
         $this->router->addRoute('POST', '/', 'AuthController', 'login');
         $this->router->addRoute('POST', '/index', 'AuthController', 'login');
         $this->router->addRoute('POST', '', 'AuthController', 'login');
-
-        
-        // API Routes
         $this->router->addRoute('POST', '/signup', 'AuthController', 'signup');
         $this->router->addRoute('POST', '/logout', 'AuthController', 'logout');
+
+        // Timetable Routes
         $this->router->addRoute('GET', '/timetable', 'TimeslotController', 'view_timetable');
         $this->router->addRoute('POST', '/timetable', 'TimeslotController', 'view_timetable');
         $this->router->addRoute('POST', '/timetable/save', 'TimeslotController', 'saveEntries');
@@ -70,8 +69,14 @@ class App {
         $this->router->addRoute('GET', '/timetable/check_lock', 'TimeslotController', 'checkLock');
         $this->router->addRoute('GET', '/timetable/lock', 'TimeslotController', 'lockClassrooms');
         $this->router->addRoute('GET', '/timetable/release', 'TimeslotController', 'releaseClassrooms');
-        $this->router->addRoute('GET', '/pending', 'AdminController', 'getPendingUsers');
+
+        // Admin Routes
+        $this->router->addRoute('POST', '/add_class', 'AdminController', 'addClass');
+        $this->router->addRoute('POST', '/add_course', 'AdminController', 'addCourse');
         $this->router->addRoute('POST', '/update_pending', 'AdminController', 'addRoles');
+        $this->router->addRoute('GET', '/pending', 'AdminController', 'getPendingUsers');
+
+        // Clash Detection Routes
         $this->router->addRoute('POST', '/clash_detect', 'DetectClash', 'checkClashes');
         $this->router->addRoute('POST', '/free_slots', 'SuggestedSlots', 'findSlots');
     }

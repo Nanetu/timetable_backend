@@ -140,25 +140,13 @@ class Timetable{
         return $this->db->results();
     }
 
-    
-
-}
-
-/*
-public function delete($code, $lid, $room, $slot, $version, $id){
-        $this->db->query("SELECT table_id FROM timetable WHERE course_code = :code AND lecturer_id = :lid AND room_id = :room AND slot_id = :slot AND version_id = :version");
-        $this->db->bind(':code', $code);
-        $this->db->bind(':room', $room);
-        $this->db->bind(':slot', $slot);
-        $this->db->bind(':version', $version);
-        $this->db->execute();
-        $table_id = $this->db->result();
-
-        $this->db->query("UPDATE timetable SET is_delete = :id WHERE table_id = :table_id");
+    public function deleteTimetableById($id) {
+        $this->db->query("DELETE FROM timetable WHERE timetable_id = :id");
         $this->db->bind(':id', $id);
         $this->db->execute();
     }
-*/
+
+}
 
 ?>
 

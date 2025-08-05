@@ -15,7 +15,7 @@ class Timetable_Version{
         return $this->db->results();
     }
 
-    public function getVersion($user, $a_year, $pid, $year){  // Should I check is_active yet?
+    public function getVersion($user, $a_year, $pid, $year){
         $this->db->query("SELECT * FROM timetable_version
                             WHERE created_by = :user
                             AND academic_year = :a_year
@@ -33,8 +33,6 @@ class Timetable_Version{
         return $this->db->result();
     }
 
-
-    // modify add version to have year and program_id dont forget
     public function addVersion($a_year, $cb, $pvid, $pid, $year){
         $this->db->query("INSERT INTO timetable_version (academic_year, created_at, created_by, previous_version_id, is_active, program_id, year)
                             VALUES (:a_year, NOW(), :cb, :pvid, 1, :pid, :year);
