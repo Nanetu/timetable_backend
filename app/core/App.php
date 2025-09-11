@@ -73,8 +73,8 @@ class App {
         // Admin Routes
         $this->router->addRoute('POST', '/add_class', 'AdminController', 'addClass');
         $this->router->addRoute('POST', '/add_course', 'AdminController', 'addCourse');
-        $this->router->addRoute('POST', '/update_pending', 'AdminController', 'addRoles');
-        $this->router->addRoute('GET', '/pending', 'AdminController', 'getPendingUsers');
+        $this->router->addRoute('POST', '/programs', 'AdminController', 'getAllPrograms');
+        $this->router->addRoute('GET', '/courses', 'AdminController', 'fetchAllCourses');
 
         // Clash Detection Routes
         $this->router->addRoute('POST', '/clash_detect', 'DetectClash', 'checkClashes');

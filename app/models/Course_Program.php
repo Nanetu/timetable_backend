@@ -53,6 +53,23 @@ class Course_Program{
         $this->db->execute();
         return $this->db->result();
     }
+
+   public function getAllCourses($programIds) {
+    if (empty($programIds) || !is_array($programIds)) {
+        return [];
+    }
+
+    $placeholders = implode(',', array_fill(0, count($programIds), '?'));
+    $query = "SELECT DISTINCT course_code, program_id, year FROM course_program WHERE program_id IN ($placeholders)";
+    $this->db->query($query);
+
+    foreach ($programIds as $index => $pid) {
+        $this->db->bind(($index + 1), $pid);
+    }
+
+    $this->db->execute();
+    return $this->db->results();
+}
 }
 
 ?>

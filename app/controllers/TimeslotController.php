@@ -355,7 +355,8 @@ class TimeslotController extends Controller
 
             // Insert timetable entries
             foreach ($entries as $entry) {
-                $this->addEntry($entry['course_id'], $entry['start_time'], $entry['end_time'], $entry['day_of_week'], $entry['lecturer_id'], $entry['room_id'], $new_version_id, $entry['id']);
+                $this->addEntry($entry['course_id'], $entry['start_time'], $entry['end_time'], $entry['day_of_week'], 
+                                $entry['lecturer_id'], $entry['room_id'], $new_version_id, $entry['id']);
             }
 
             echo json_encode([
@@ -645,7 +646,7 @@ class TimeslotController extends Controller
         );
 
         // if ($result['success']) {
-        //     echo json_encode(['message' => $result['message']]);
+        //     echo json_encodbe(['message' => $result['message']]);
         // } else {
         //     echo json_encode(['error'=>$result['message']]);
         // }
