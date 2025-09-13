@@ -75,6 +75,10 @@ class App {
         $this->router->addRoute('POST', '/add_course', 'AdminController', 'addCourse');
         $this->router->addRoute('POST', '/programs', 'AdminController', 'getAllPrograms');
         $this->router->addRoute('GET', '/courses', 'AdminController', 'fetchAllCourses');
+        $this->router->addRoute('POST', '/delete_class', 'AdminController', 'deleteClass');
+        $this->router->addRoute('POST', '/delete_course', 'AdminController', 'deleteCourse');
+        $this->router->addRoute('POST', '/edit_course', 'AdminController', 'editCourse');
+        $this->router->addRoute('POST', '/edit_class', 'AdminController', 'editClass');
 
         // Clash Detection Routes
         $this->router->addRoute('POST', '/clash_detect', 'DetectClash', 'checkClashes');

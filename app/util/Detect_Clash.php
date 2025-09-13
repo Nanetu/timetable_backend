@@ -16,7 +16,6 @@ Class DetectClash extends Controller {
                 continue;
             }
 
-            // Check if the day_of_week and time range overlaps
             if ($slot_details['day_of_week'] == $entry['day_of_week']) {
                 $existing_start = strtotime($slot_details['start_time']);
                 $existing_end = strtotime($slot_details['end_time']);
@@ -24,9 +23,7 @@ Class DetectClash extends Controller {
                 $new_end = strtotime($entry['end_time']);
 
                 if (($new_start < $existing_end) && ($new_end > $existing_start)) {
-                    // Check event_id
                     if ($slot['event_id'] == $entry['id']) {
-                        // Same event, not a clash
                         continue;
                     }
                     return true;

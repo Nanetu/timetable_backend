@@ -1,3 +1,4 @@
+
 <?php
 
 class Course_Program{
@@ -16,16 +17,38 @@ class Course_Program{
         return $this->db->results();
     }
 
-    public function getCourseByYear($code, $pid){
-        $this->db->query("SELECT year FROM course WHERE course_code = :code AND program_id = :pid");
-        $this->db->bind(':code', $code);
-        $this->db->bind(':pid', $pid);
+    public function getProgramsByCourseCode($courseCode) {
+        $this->db->query("SELECT cp.program_id, cp.year, p.program_name
+                          FROM course_program cp
+                          JOIN program p ON cp.program_id = p.program_id
+                          WHERE cp.course_code = :code");
+        $this->db->bind(':code', $courseCode);
+        $this->db->execute();
+        return $this->db->results();
+    }
+
+    public function getCoursesByProgramIds($programIds) {
+        if (empty($programIds) || !is_array($programIds)) {
+            return [];
+        }
+
+        $placeholders = implode(',', array_fill(0, count($programIds), '?'));
+        $query = "SELECT c.course_code, c.course_name, cp.program_id, cp.year
+                FROM course_program cp
+                JOIN course c ON cp.course_code = c.course_code
+                WHERE cp.program_id IN ($placeholders)";
+        $this->db->query($query);
+
+        foreach ($programIds as $index => $pid) {
+            $this->db->bind(($index + 1), $pid);
+        }
+
         $this->db->execute();
         return $this->db->results();
     }
 
     public function addCourseProgram($code, $pid, $year, $version){
-        $this->db->query("INSERT INTO course(course_code, program_id, year, course_version) VALUES (:code, :pid, :year, :version)");
+        $this->db->query("INSERT INTO course_program(course_code, program_id, year, course_version) VALUES (:code, :pid, :year, :version)");
         $this->db->bind(':code', $code);
         $this->db->bind(':pid', $pid);
         $this->db->bind(':year', $year);
@@ -69,7 +92,16 @@ class Course_Program{
 
     $this->db->execute();
     return $this->db->results();
-}
+
+    }
+
+    public function update($code, $pid, $year){
+        $this->db->query("UPDATE course_program SET program_id = :pid, year = :year WHERE course_code = :code");
+        $this->db->bind(':code', $code);
+        $this->db->bind(':pid', $pid);
+        $this->db->bind(':year', $year);
+        $this->db->execute();
+    }
 }
 
 ?>

@@ -7,11 +7,9 @@ class TimeslotController extends Controller
     private $timetableModel;
     private $tsModel;
     private $registrationModel;
-    private $universityModel;
     private $schoolModel;
     private $programModel;
     private $departmentModel;
-    private $courseModel;
     private $classModel;
     private $courseProgramModel;
 
@@ -23,11 +21,9 @@ class TimeslotController extends Controller
         $this->timetableModel = $this->loadModel("Timetable");
         $this->tsModel = $this->loadModel("Timeslot");
         $this->registrationModel = $this->loadModel("Registration");
-        $this->universityModel = $this->loadModel("University");
         $this->schoolModel = $this->loadModel("School");
         $this->programModel = $this->loadModel("Program");
         $this->departmentModel = $this->loadModel("Department");
-        $this->courseModel = $this->loadModel("Course");
         $this->classModel = $this->loadModel("Classroom");
         $this->courseProgramModel = $this->loadModel("Course_Program");
     }
@@ -89,7 +85,6 @@ class TimeslotController extends Controller
                 $course_versions = $this->courseProgramModel->getCourseVersionsByProgramYear($program_id, $year);
                 $course_versions = array_map(function($row) { return $row['course_version']; }, $course_versions);
 
-                // Get timetable entries for these course_versions
                 $entries = $this->timetableModel->getTimetableByCourseVersions($course_versions);
 
                 foreach ($entries as &$entry) {
@@ -133,12 +128,10 @@ class TimeslotController extends Controller
                 if ($previous_id) {
                     $previous_id = $previous_id['previous_version_id'];
                 } else {
-                    // If no previous version, stay at current
                     $previous_id = $version;
                 }
 
                 $entries = $this->timetableModel->getTimetableByCourseVersionsAndVersion($course_versions, $previous_id);
-                // $entries = $this->timetableModel->getTimetable($program_id, $year, $previous_id);
 
                 foreach ($entries as &$entry) {
                     $slot_id = $entry['slot_id'];
@@ -147,7 +140,6 @@ class TimeslotController extends Controller
                     $lecturer_id = $entry['lecturer_id'];
                     $lecturer = $this->userModel->getUserName($lecturer_id);
 
-                    // Append the slot data to the entry
                     $entry['start_time'] = $slot_data['start_time'];
                     $entry['end_time'] = $slot_data['end_time'];
                     $entry['day_of_week'] = $slot_data['day_of_week'];
@@ -176,23 +168,20 @@ class TimeslotController extends Controller
 
                 $course_versions = $this->courseProgramModel->getCourseVersionsByProgramYear($program_id, $year);
                 $course_versions = array_map(function($row) { return $row['course_version']; }, $course_versions);
-                // Get current version
+
                 $version = $this->versionModel->getVersion($user_id, $current_year, $program_id, $year);
                 if ($version) {
                     $version = $version['version_id'];
                 }
 
-                // Find the next version in the chain (unrollback)
                 $next_version = $this->versionModel->getNextVersion($version, $program_id, $year);
                 if ($next_version) {
                     $next_version_id = $next_version['version_id'];
                 } else {
-                    // If no next version, stay at current
                     $next_version_id = $version;
                 }
 
                 $entries = $this->timetableModel->getTimetableByCourseVersionsAndVersion($course_versions, $next_version_id);
-                // $entries = $this->timetableModel->getTimetable($program_id, $year, $previous_id);
 
                 foreach ($entries as &$entry) {
                     $slot_id = $entry['slot_id'];
@@ -201,7 +190,6 @@ class TimeslotController extends Controller
                     $lecturer_id = $entry['lecturer_id'];
                     $lecturer = $this->userModel->getUserName($lecturer_id);
 
-                    // Append the slot data to the entry
                     $entry['start_time'] = $slot_data['start_time'];
                     $entry['end_time'] = $slot_data['end_time'];
                     $entry['day_of_week'] = $slot_data['day_of_week'];
@@ -236,7 +224,6 @@ class TimeslotController extends Controller
                     $lecturer_id = $entry['lecturer_id'];
                     $lecturer = $this->userModel->getUserName($lecturer_id);
 
-                    // Append the slot data to the entry
                     $entry['start_time'] = $slot_data['start_time'];
                     $entry['end_time'] = $slot_data['end_time'];
                     $entry['day_of_week'] = $slot_data['day_of_week'];
@@ -272,7 +259,6 @@ class TimeslotController extends Controller
                     $lecturer_id = $entry['lecturer_id'];
                     $lecturer = $this->userModel->getUserName($lecturer_id);
 
-                    // Append the slot data to the entry
                     $entry['start_time'] = $slot_data['start_time'];
                     $entry['end_time'] = $slot_data['end_time'];
                     $entry['day_of_week'] = $slot_data['day_of_week'];
@@ -332,7 +318,6 @@ class TimeslotController extends Controller
 
             $course_year = $input['year'];
 
-            // Get previous version using user_id, program_id and course_year
             $previous = $this->versionModel->getVersion($user_id['user_id'], $current_year, $program_id, $course_year) ?? null;
 
 
@@ -341,11 +326,8 @@ class TimeslotController extends Controller
                 $this->versionModel->update($previous, 0);
             }
 
-            // Add new version
             $this->versionModel->addVersion($current_year, $user_id['user_id'], $previous, $program_id, $course_year);
 
-
-            // Immediately fetch it back
             $new_version = $this->versionModel->getVersion($user_id['user_id'], $current_year, $program_id, $course_year);
             if (!$new_version || !isset($new_version['version_id'])) {
                 throw new Exception("Version not found after insert");
@@ -353,7 +335,6 @@ class TimeslotController extends Controller
 
             $new_version_id = $new_version['version_id'];
 
-            // Insert timetable entries
             foreach ($entries as $entry) {
                 $this->addEntry($entry['course_id'], $entry['start_time'], $entry['end_time'], $entry['day_of_week'], 
                                 $entry['lecturer_id'], $entry['room_id'], $new_version_id, $entry['id']);
@@ -392,16 +373,6 @@ class TimeslotController extends Controller
 
         $this->setJsonHeaders();
 
-        // $university = $_GET['university'] ?? $_POST['university'] ?? null;
-
-        // if (!$university) {
-        //     echo json_encode(['error' => 'No university provided']);
-        //     return;
-        // }
-        // $university_id = $this->universityModel->getUniversityByName($university);
-        // $university_id = $university_id['university_id'];
-        // $schools = $this->schoolModel->getAllSchools($university_id);
-
         $email = $_SESSION['email'] ?? null;
         if (!$email) {
             http_response_code(401);
@@ -430,15 +401,12 @@ class TimeslotController extends Controller
             echo json_encode(['error' => 'No school provided']);
             return;
         }
-        //$school_id = $this->schoolModel->getSchoolByName($school);
-        //$school_id = $school_id['school_id'];
         $departments = $this->departmentModel->getDepartmentBySid($school);
 
         $programs = [];
         foreach ($departments as $department) {
             $department = $department['department_id'];
             $temp = $this->programModel->getProgramByDid($department);
-            //$programs [] = $temp;
             $programs = array_merge($programs, $temp);
         }
 
@@ -461,8 +429,6 @@ class TimeslotController extends Controller
             return;
         }
 
-        //$program_id = $this->programModel->getProgramByName($program);
-        //$program_id = $program_id['program_id'];
         $courses = $this->courseProgramModel->getCourseByPidYear($program, $year);
 
         echo json_encode([
@@ -490,8 +456,6 @@ class TimeslotController extends Controller
             echo json_encode(['error' => 'No school provided']);
             return;
         }
-        //$school_id = $this->schoolModel->getSchoolByName($school);
-        //$school_id = $school_id['school_id'];
         $lecturers = $this->userModel->getLecturerBySid($school);
 
         echo json_encode([
@@ -577,38 +541,6 @@ class TimeslotController extends Controller
 
         $this->classModel->classroomLock($school, 1);
         echo json_encode(['status' => 'success', 'message' => 'Classrooms locked successfully']);
-
-        $result = sendMail(
-            $email,
-            "mushongomananetu@gmail.com",
-            "Nanetu",
-            "Classroom lock",
-            $school,
-            "All classes belonging to the $school_name have been locked"
-        );
-
-        // if ($result['success']) {
-        //     echo json_encode(['message' => $result['message']]);
-        // } else {
-        //     echo json_encode(['error'=>$result['message']]);
-        // }
-
-        /*
-        $recipients = $this->userModel->getAdminsForMail('admin');
-
-        foreach($recipients as $recipient){
-            if($recipient['email'] == $email) continue;
-            sendMail(
-                    $email, 
-                    $recipient['email'], 
-                    $recipient['name'],
-                    "Classroom lock",
-                    $school,
-                    "All classes belonging to the $school have been locked"
-                );
-        }
-
-        */
     }
 
     public function releaseClassrooms()
@@ -635,36 +567,5 @@ class TimeslotController extends Controller
 
         $this->classModel->classroomLock($school, 0);
         echo json_encode(['status' => 'success', 'message' => 'Classrooms unlocked successfully']);
-
-        $result = sendMail(
-            $email,
-            "mushongomananetu@gmail.com",
-            "Nanetu",
-            "Classroom lock",
-            $school,
-            "All classes belonging to the $school_name have been unlocked"
-        );
-
-        // if ($result['success']) {
-        //     echo json_encodbe(['message' => $result['message']]);
-        // } else {
-        //     echo json_encode(['error'=>$result['message']]);
-        // }
-
-        /*
-        $recipients = $this->userModel->getAdminsForMail('admin');
-
-        foreach($recipients as $recipient){
-            if($recipient['email'] == $email) continue;
-            sendMail(
-                    $email, 
-                    $recipient['email'], 
-                    $recipient['name'],
-                    "Classroom lock",
-                    $school,
-                    "All classes belonging to the $school have been unlocked"
-                );
-        }
-        */
     }
 }

@@ -58,7 +58,6 @@ class AuthController extends Controller {
             $this->userModel->addUser($name, $hash, $email, $school_id);
             echo json_encode(['status'=>'Success, pending approval']);
 
-            // now send notification to admin and redirect to login
         } catch(Exception $e){
             http_response_code(500);
             echo json_encode(['error'=> $e->getMessage()]);
@@ -165,8 +164,6 @@ class AuthController extends Controller {
 
     public function logout(){
         try {
-
-            $_SESSION = [];
 
             if (ini_get("session.use_cookies")) {
                 $params = session_get_cookie_params();

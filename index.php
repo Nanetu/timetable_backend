@@ -20,7 +20,6 @@ require_once 'app\controllers\TimeslotController.php';
 require_once 'app\controllers\AuthController.php';
 require_once 'app\controllers\AdminController.php';
 require_once 'app\util\Detect_Clash.php';
-require_once 'app\util\PHPMailer.php';
 require_once 'app\util\SuggestedSlots.php';
 
 

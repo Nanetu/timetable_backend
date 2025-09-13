@@ -43,6 +43,14 @@ class Program{
         return $this->db->result();
     }
 
+    public function getProgramById($id){
+        $this->db->query("SELECT program_name FROM program WHERE program_id = :id");
+        $this->db->bind(':id', $id);
+        $this->db->execute();
+        return $this->db->result();
+    }
+
+
     public function getProgramsByDepartmentIds($departmentIds) {
     if (empty($departmentIds) || !is_array($departmentIds)) {
         return [];

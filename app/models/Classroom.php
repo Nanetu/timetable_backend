@@ -15,12 +15,33 @@ class Classroom{
         return $this->db->results();
     }
 
+    public function getClassrooms(){
+        $this->db->query("SELECT * FROM classroom");
+        $this->db->execute();
+        return $this->db->results();
+    }
+     
+    public function getSchoolId($id){
+        $this->db->query("SELECT school_id FROM classroom WHERE room_id = :id");
+        $this->db->bind(':id', $id);
+        $this->db->execute();
+        return $this->db->result();
+    }
+
+
     public function addClassroom($id, $sid, $capacity, $locked){
         $this->db->query("INSERT INTO classroom(room_id, school_id, capacity, locked) VALUES (:id, :sid, :capacity, :locked)");
         $this->db->bind(':id', $id);
         $this->db->bind(':sid', $sid);
         $this->db->bind(':capacity', $capacity);
         $this->db->bind('locked', $locked);
+        $this->db->execute();
+    }
+
+    public function updateCapacity($id, $capacity){
+        $this->db->query("UPDATE classroom SET capacity = :capacity WHERE room_id = :id");
+        $this->db->bind(':id', $id);
+        $this->db->bind(':capacity', $capacity);
         $this->db->execute();
     }
 
@@ -40,13 +61,6 @@ class Classroom{
         $this->db->execute();
     }
 
-    public function getClassroomByID($id){
-        $this->db->query("SELECT * FROM classroom WHERE classroom_id = :id");
-        $this->db->bind(':id', $id);
-        $this->db->execute();
-        return $this->db->result();
-    }
-
     public function isClassroomLocked($id){
         $this->db->query("SELECT locked FROM classroom WHERE school_id = :id");
         $this->db->bind(':id', $id);
@@ -56,7 +70,7 @@ class Classroom{
     }
 
     public function delete($id){
-        $this->db->query("DELETE FROM classroom WHERE classroom_id = :id");
+        $this->db->query("DELETE FROM classroom WHERE room_id = :id");
         $this->db->bind(':id', $id);
         $this->db->execute();
     }
