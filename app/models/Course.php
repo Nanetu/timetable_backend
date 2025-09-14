@@ -41,6 +41,15 @@ class Course
         $this->db->execute();
     }
 
+    public function updateCourse($code, $newCode)
+    {
+        $this->db->query("UPDATE course SET course_code = :newCode WHERE course_code = :code");
+        $this->db->bind(':code', $code);
+        $this->db->bind(':newCode', $newCode);
+        $this->db->execute();
+    }
+
+
     public function delete($id)
     {
         $this->db->query("DELETE FROM course WHERE course_code = :id");

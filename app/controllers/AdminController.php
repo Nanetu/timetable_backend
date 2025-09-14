@@ -195,8 +195,8 @@ class AdminController extends Controller
         }
 
         $data = json_decode(file_get_contents('php://input'), true);
-        $programs = $data['programs'] ?? null;
-        $course = $data['course'] ?? null;
+        $programs = $data['programYears'] ?? null;
+        $course = $data['name'] ?? null;
         $code = $data['code'] ?? null;
 
         if (!$programs || !$course || !$code) {
@@ -216,8 +216,10 @@ class AdminController extends Controller
         $version = $this->courseModel->getVersion($code);
 
 
-        foreach ($programs as $program => $year) {
-            $program_id = $this->programModel->getProgramByName($program);
+        foreach ($programs as $pair) {
+            $program_name = $pair['program'];
+            $year = $pair['year'];
+            $program_id = $this->programModel->getProgramByName($program_name);
             $this->courseProgramModel->addCourseProgram($code, $program_id['program_id'], $year, $version['course_version']);
         }
 
@@ -301,47 +303,91 @@ class AdminController extends Controller
         ]);
     }
 
-    public function editCourse(){
-         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-            http_response_code(405);
-            echo json_encode(['error' => 'Method not allowed']);
-            return;
-        }
+    public function editCourse() {
+    if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+        http_response_code(405);
+        echo json_encode(['error' => 'Method not allowed']);
+        return;
+    }
 
-        if (!isset($_SESSION['email'])) {
-            http_response_code(401);
-            echo json_encode(['error' => 'Unable to authenticate user']);
-            return;
-        }
+    if (!isset($_SESSION['email'])) {
+        http_response_code(401);
+        echo json_encode(['error' => 'Unable to authenticate user']);
+        return;
+    }
 
-        $data = json_decode(file_get_contents('php://input'), true);
-        $course = $data['code'] ?? null;
-        $name = $data['name'] ?? null;
-        $programs = $data['programs'] ?? null;
+    $data = json_decode(file_get_contents('php://input'), true);
+    $courseCode = $data['code'] ?? null;
+    $newCode    = $data['newCode'] ?? null;
+    $name       = $data['name'] ?? null;
+    $programs   = $data['programs'] ?? null;
 
-        if(!$course){
-            http_response_code(400);
-            echo json_encode(['error' => 'Course code']);
-            return;
-        }
-        if($name){
-            $this->courseModel->update($course, $name);
-        }
+    if (!$courseCode) {
+        http_response_code(400);
+        echo json_encode(['error' => 'Course code is required']);
+        return;
+    }
 
-        if(!$programs){
-            return;
+    if ($name || $newCode) {
+        if ($newCode) {
+            $this->courseModel->updateCourse($courseCode, $newCode);
+            $courseCode = $newCode;
         }
+        $this->courseModel->update($courseCode, $name);
+    }
 
-        foreach($programs as $program=>$year){
-            $program_id = $this->programModel->getProgramByName($program);
-            $this->courseProgramModel->update($course, $program_id['program_id'], $year);
-        }
-
+    if (!$programs) {
         echo json_encode([
             'status' => 'success',
-            'message' => 'Course updated successfully'
+            'message' => 'Course updated (name/code only)'
         ]);
+        return;
     }
+
+    $version = $this->courseModel->getVersion($courseCode);
+    $version = $version['course_version'];
+
+    $currentPairs = $this->courseProgramModel->getProgramsByCourseCode($courseCode);
+    
+    $currentMap = [];
+    foreach ($currentPairs as $pair) {
+        $currentMap[$pair['program_name']] = $pair['year'];
+    }
+
+    foreach ($programs as $programName => $year) {
+        $program = $this->programModel->getProgramByName($programName);
+        if (!$program) {
+            continue; // skip if program doesn't exist
+        }
+        $program_id = $program['program_id'];
+
+        if (isset($currentMap[$programName])) {
+            // Already exists → check if year changed
+            if ($currentMap[$programName] != $year) {
+                // Update existing mapping
+                $this->courseProgramModel->updateYear($courseCode, $program_id, $year);
+            }
+            unset($currentMap[$programName]); // mark as handled
+        } else {
+            // New mapping → insert
+            $this->courseProgramModel->addCourseProgram($courseCode, $program_id, $year, $version);
+        }
+    }
+
+    // Remaining in $currentMap are pairs no longer in payload → delete them
+    foreach ($currentMap as $programName => $year) {
+        $program = $this->programModel->getProgramByName($programName);
+        if ($program) {
+            $this->courseProgramModel->deletePYPairs($courseCode, $program['program_id'], $year);
+        }
+    }
+
+    echo json_encode([
+        'status' => 'success',
+        'message' => 'Course updated successfully (code/name/programs)'
+    ]);
+}
+
 
     public function editClass(){
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {

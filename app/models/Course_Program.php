@@ -56,9 +56,25 @@ class Course_Program{
         $this->db->execute();
     }
 
+    public function updateYear($code, $pid, $year){
+        $this->db->query("UPDATE course_program SET year = :year WHERE course_code = :code AND program_id = :pid");
+        $this->db->bind(':code', $code);
+        $this->db->bind(':pid', $pid);
+        $this->db->bind(':year', $year);
+        $this->db->execute();
+    }
+
     public function delete($id){
         $this->db->query("DELETE FROM course WHERE course_code = :id");
         $this->db->bind(':id', $id);
+        $this->db->execute();
+    }
+
+    public function deletePYPairs($code, $pid, $year){
+        $this->db->query("DELETE FROM course_program WHERE course_code = :code AND program_id = :pid AND year = :year");
+        $this->db->bind(':code', $code);
+        $this->db->bind(':pid', $pid);
+        $this->db->bind(':year', $year);
         $this->db->execute();
     }
 
